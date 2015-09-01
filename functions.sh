@@ -53,6 +53,12 @@ function moveIdleFilesInPath() {
 	else
 		targetFolderSet=1
 		targetFolder="$2"
+
+		if [[ ! -e "$targetFolder" ]]; then
+			echo "Target folder does not exist."
+			exit 1
+		fi
+
 	fi
 	echo "Entering $sourceFolder. Target is $targetFolder"
 	# cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f  -mmin +$minfind -print0 | while read -d "" path;do
@@ -62,6 +68,7 @@ function moveIdleFilesInPath() {
 		#
 		filesize=$(du -k "$path"|awk '{print $1}')
 
+		#if no targetFolder is set, then find the one with most free space.
 		if [[ $targetFolderSet -eq 0 ]]; then
 			targetFolder=$(getDriveWithMostFreeSpace "$sourceFolder")
 		fi
