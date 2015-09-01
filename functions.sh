@@ -23,7 +23,7 @@ function getDriveWithMostFreeSpace() {
 	#$1 is the pool. Like /mergerfsVol_with_fwfs
 	diskToDrain="$1"
 	if [[ -z $POOL ]]; then
-		pool="$getPoolFromDrive "$diskToDrain""
+		pool="$(getPoolFromDrive "$diskToDrain")"
 	else
 		pool="$POOL"
 	fi
@@ -59,6 +59,7 @@ function moveIdleFilesInPath() {
 	cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f -mmin +$minfind -printf "%C@ %p\n" |sort|cut -d ' ' -f2-| while read path;do
 		[[ -e "$path" ]] || continue #rsync can take a long time and files can have been moved
 		lsof "$path" &> /dev/null && continue # move along if the file is in use
+		#
 		filesize=$(du -k "$path"|awk '{print $1}')
 
 		if [[ $targetFolderSet -eq 0 ]]; then
@@ -75,7 +76,7 @@ function moveIdleFilesInPath() {
 			# exit
 
 		else
-			echo "Not enough space."
+			echo "Not enough space on target."
 			cd $oldpwd && exit 1
 		fi
 	done
