@@ -7,7 +7,7 @@ scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd );
 source "$scriptDir"/functions.sh
 hash rsync ionice lsof find xattr 2>/dev/null || echo "Requirements: rsync lsof find xattr"
 
-[ -e "$scriptDir"/settings.conf ] && source "$scriptDir"/settings.conf||FINDOPTS=""
+[ -e "$scriptDir"/settings.conf ] && source "$scriptDir"/settings.conf||FINDOPTS=(-not -path "./staticfolder/*")
 
 
 while getopts "ht:a:b:" option
