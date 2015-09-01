@@ -19,6 +19,9 @@ function getPoolFromDrive() {
 	echo -n "$(df -k|grep $(basename "$drive")|grep -v "$drive"|awk '{print $6}')"
 }
 
+function getDriveFromPath(){
+	echo -n $(df "$1"|tail -n1|awk '{print $6}')
+}
 function getDriveWithMostFreeSpace() {
 	#$1 is the pool. Like /mergerfsVol_with_fwfs
 	diskToDrain="$1"
@@ -49,7 +52,11 @@ function moveIdleFilesInPath() {
 	sourceFolder="$1"
 	if [[ -z $2 ]]; then
 		targetFolderSet=0
-		df "$sourceFolder"|tail -n1|grep "$sourceFolder" > /dev/null||echo "Without target folder, the source folder needs to be the root of the drive." && exit 1 #make sure sourceFolder is at root of disk.
+		#df "$sourceFolder"|tail -n1|grep "$sourceFolder" > /dev/null||echo "Without target folder, the source folder needs to be the root of the drive." && exit 1 #make sure sourceFolder is at root of disk.
+		if ! df "$sourceFolder"|tail -n1|grep "$sourceFolder" > /dev/null;then
+			echo "Without target folder, the source folder needs to be the root of the drive."
+			exit 1
+		fi
 	else
 		targetFolderSet=1
 		targetFolder="$2"
@@ -60,7 +67,9 @@ function moveIdleFilesInPath() {
 		fi
 
 	fi
-	echo "Entering $sourceFolder. Target is $targetFolder"
+
+	rootOfSource="$(getDriveFromPath "$sourceFolder")"
+	echo "Entering $sourceFolder."
 	# cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f  -mmin +$minfind -print0 | while read -d "" path;do
 	cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f -mmin +$minfind -printf "%C@ %p\n" |sort|cut -d ' ' -f2-| while read path;do
 		[[ -e "$path" ]] || continue #rsync can take a long time and files can have been moved
@@ -70,7 +79,7 @@ function moveIdleFilesInPath() {
 
 		#if no targetFolder is set, then find the one with most free space.
 		if [[ $targetFolderSet -eq 0 ]]; then
-			targetFolder=$(getDriveWithMostFreeSpace "$sourceFolder")
+			targetFolder=$(getDriveWithMostFreeSpace "$rootOfSource")
 		fi
 
 		freeSpaceOnTarget=$(df -k "$targetFolder"|awk '/[0-9]%/{print $(NF-2)}')
