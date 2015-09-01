@@ -25,13 +25,12 @@ function getDriveFromPath(){
 function getDriveWithMostFreeSpace() {
 	#$1 is the pool. Like /mergerfsVol_with_fwfs
 	diskToDrain="$1"
-	if [[ -z $POOL ]]; then
+	if [[ -z "$2" ]]; then
 		pool="$(getPoolFromDrive "$diskToDrain")"
 	else
-		pool="$POOL"
+		pool="$2"
 	fi
 	free=0
-	
 	drives=$(xattr -l "$pool"/.mergerfs|grep srcmounts|cut -d" " -f2| sed 's/:/\n/g')
 	while read drive;do
 		if [[ $drive == $diskToDrain ]];then
@@ -50,6 +49,7 @@ function getDriveWithMostFreeSpace() {
 function moveIdleFilesInPath() {
 	oldpwd=$PWD
 	sourceFolder="$1"
+
 	if [[ -z $2 ]]; then
 		targetFolderSet=0
 		#df "$sourceFolder"|tail -n1|grep "$sourceFolder" > /dev/null||echo "Without target folder, the source folder needs to be the root of the drive." && exit 1 #make sure sourceFolder is at root of disk.
@@ -69,7 +69,14 @@ function moveIdleFilesInPath() {
 	fi
 
 	rootOfSource="$(getDriveFromPath "$sourceFolder")"
-	echo "Entering $sourceFolder."
+	if [[ -z "$POOL" ]]; then
+		POOL="$(getPoolFromDrive "$rootOfSource")"
+		if [[ $(echo "$POOL" |wc -l) -gt 1 ]]; then
+			echo "More than one pool with this drive. Use POOL in settings to specify."
+			exit 1
+		fi
+	fi
+	echo "Entering $sourceFolder. Scanning. Standby."
 	# cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f  -mmin +$minfind -print0 | while read -d "" path;do
 	cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f -mmin +$minfind -printf "%C@ %p\n" |sort|cut -d ' ' -f2-| while read path;do
 		[[ -e "$path" ]] || continue #rsync can take a long time and files can have been moved
@@ -79,7 +86,7 @@ function moveIdleFilesInPath() {
 
 		#if no targetFolder is set, then find the one with most free space.
 		if [[ $targetFolderSet -eq 0 ]]; then
-			targetFolder=$(getDriveWithMostFreeSpace "$rootOfSource")
+			targetFolder=$(getDriveWithMostFreeSpace "$rootOfSource" $POOL)
 		fi
 
 		freeSpaceOnTarget=$(df -k "$targetFolder"|awk '/[0-9]%/{print $(NF-2)}')
