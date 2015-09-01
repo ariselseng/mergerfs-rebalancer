@@ -5,6 +5,7 @@ scriptDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd );
 
 #source the function script
 source "$scriptDir"/functions.sh
+hash rsync lsof find xattr 2>/dev/null|| echo "Requirements: rsync lsof find xattr" && usage && exit 1 
 
 [-e "$scriptDir"/settings.conf ] && source "$scriptDir"/settings.conf||FINDOPTS=""
 
