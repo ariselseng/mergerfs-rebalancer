@@ -56,6 +56,7 @@ function moveIdleFilesInPath() {
 	fi
 	echo "entering $sourceFolder. Target is $targetFolder"
 	cd "$sourceFolder" && find . "${FINDOPTS[@]}" -type f  -mmin +$minfind -print0 | while read -d "" path;do
+		[[ -e "$path" ]] || continue #rsync can take a long time and files can have been moved
 		lsof "$path" &> /dev/null && continue # move along if the file is in use
 		filesize=$(du -k "$path"|awk '{print $1}')
 
