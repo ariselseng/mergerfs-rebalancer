@@ -12,26 +12,26 @@ hash rsync ionice lsof find xattr 2>/dev/null || echo "Requirements: rsync lsof 
 
 while getopts "ht:a:b:" option
 do
-     case $option in
-         h)
-             usage && exit
-             ;;
-         t)
-             minfind="$OPTARG"
-             ;;
-         a)
-             sourcedisk="${OPTARG%/}"
-             ;;
-	b)
-             targetdisk="${OPTARG%/}"
-             ;;
+    case $option in
+        h)
+            usage && exit
+        ;;
+        t)
+            minfind="$OPTARG" #in minutes how long time files must be to be processed.
+        ;;
+        a)
+            sourcePath="${OPTARG%/}"
+        ;;
+        b)
+            targetPath="${OPTARG%/}"
+        ;;
 
-         ?)
-             usage
-	    exit 1
-             ;;
-     esac
+        ?)
+            usage
+            exit 1
+        ;;
+    esac
 done
 
-[ -z "$sourcedisk" ] && exit 1
-moveIdleFilesInPath "$sourcedisk" "$targetdisk"
+[ -z "$sourcePath" ] && exit 1
+moveIdleFilesInPath "$sourcePath" "$targetPath"
