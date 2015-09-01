@@ -49,6 +49,7 @@ function moveIdleFilesInPath() {
 	sourceFolder="$1"
 	if [[ -z $2 ]]; then
 		targetFolderSet=0
+		df "$sourceFolder"|tail -n1|grep "$sourceFolder" > /dev/null||echo "Without target folder, the source folder needs to be the root of the drive." && exit 1 #make sure sourceFolder is at root of disk.
 	else
 		targetFolderSet=1
 		targetFolder="$2"
